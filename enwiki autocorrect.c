@@ -28,7 +28,7 @@ exists = malloc (19000000 * sizeof(int));
 
 //for(i=0;i<33000000;i++)exists[i]=0;
 // to access character i of word w
-FILE *fp1 = fopen("enwiki-20191020-pages-articles.xml", "r");
+FILE *fp1 = fopen("enwikibooks-20191201-pages-articles.xml", "r");
 FILE *fp2 = fopen("33mcorrections.txt", "r");
 FILE *fp3 = fopen("file3.txt", "w");
 
