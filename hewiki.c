@@ -89,8 +89,8 @@ if(context[BEFORE-4]=='<'&&context[BEFORE-3]=='n'&&
 if((context[BEFORE-4]=='F'||context[BEFORE-4]=='f')&&context[BEFORE-3]=='i'&&
    context[BEFORE-2]=='l'&&context[BEFORE-1]=='e'){typo[0]=0;fileflag=0;}
 if(fileflag==0&&c=='\n'){fileflag=1;}
-   //skip files
-if((unsigned char)context[BEFORE-2]==0xA5&&context[BEFORE-1]==':'){typo[0]=0;fileflag2=0;}
+   //skip files in hebrew תמונה: קובץ:
+if(((unsigned char)context[BEFORE-2]==0xA5||(unsigned char)context[BEFORE-2]==0x94)&&context[BEFORE-1]==':'){typo[0]=0;fileflag2=0;}
 if(fileflag2==0&&c=='\n'){fileflag2=1;}
    //skip files
 if((context[BEFORE-5]=='I'||context[BEFORE-5]=='i')&&context[BEFORE-4]=='m'&&
