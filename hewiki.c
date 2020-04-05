@@ -99,7 +99,7 @@ if(imageflag==0&&c=='\n'){imageflag=1;}
 
   //skip templates
 if(context[BEFORE-1]=='{'&&c=='{'){templateflag=0;}
-if(context[BEFORE-1]=='\n'&&c!='='){templateflag=1;}
+if(context[BEFORE-1]=='\n'&&c=='='){templateflag=1;}
 
  //skip inner links
 if(context[BEFORE-1]=='['&&c=='['){linkflag=0;}
