@@ -12,6 +12,7 @@ int aftercount=0,contextJump=0,endofcontext=BEFORE;
 char typo[80];
 char oldtypo[80];
 char pagename[100];
+char afterword=' ';
 char *p;
 char lastchar=0,lastchar2=0;
 char (*milon)[80];
@@ -20,8 +21,8 @@ milon = malloc (14000000 * sizeof(char[80]));
 int *exists;
 exists = malloc (14000000 * sizeof(int));
 //for(i=0;i<3000000;i++)exists[i]=0;
-FILE *fp1 = fopen("hewiki-20200220-pages-articles.xml", "r");
-FILE *fp2 = fopen("VV.txt", "r");
+FILE *fp1 = fopen("hewiki-20200401-pages-articles.xml", "r");
+FILE *fp2 = fopen("history.txt", "r");
 FILE *fp3 = fopen("file3.txt", "w");
 
 if (fp1 == NULL || fp2 == NULL || fp3 == NULL )
@@ -34,7 +35,7 @@ j=0;
 k=0;
 char c;
 //load main milon
-while ((c = fgetc(fp2)) != EOF) 
+while ((c = fgetc(fp2)) != EOF)
 {
 milon[j][k]=c;
 if(c==',')milon[j][k]=0;
@@ -49,8 +50,8 @@ c=0;
 while (c!=EOF){//word loop
     int found=0;
         k=0;
-  //  for(i=0;i<20;i++)typo[i]=0;    
-lll++;if(lll==30000)break;
+  //  for(i=0;i<20;i++)typo[i]=0;
+//lll++;if(lll==30000)break;
 
 while ((c = fgetc(fp1))!=EOF)//letter loop
 {
@@ -146,24 +147,25 @@ while(max>=min){
                                       aftercount=AFTER;
                                       contextJump=1;
                                       //if there is newline, start after it
-                                      for(i=BEFORE;i>1;i--)
+                                      for(i=BEFORE-2;i>0;i--)
                                           {
                                               if(context[i]=='\t'||context[i]=='\v'||
                                                  context[i]=='&'||context[i]==';'||
                                                  context[i]=='\n'||context[i]=='\r'){contextJump=i+1;break;}
                                           }
-                                      //if jumped more than word length, print word
-                                      if((BEFORE-contextJump)<strlen(typo))fprintf(fp3, "%s", typo);
-                                      //if no jump happened and char before it 0xD7, move one further
-                                      if(contextJump==1&&(unsigned char)context[0]==0xD7)contextJump++;
-                                      if(context[BEFORE-1]=='\v'||
+                                       if(context[BEFORE-1]=='\v'||
                                                  context[BEFORE-1]=='&'||context[BEFORE-1]==';'||
                                                  context[BEFORE-1]=='\n'||context[BEFORE-1]=='\r'){endofcontext--;}
-                                     
+                                       //if jumped more than word length, print word
+                                      if((BEFORE-contextJump)<strlen(typo)+3)fprintf(fp3, "jjjjjj");
+                                      //if no jump happened and char before it 0xD7, move one further
+                                      if(contextJump==1&&(unsigned char)context[0]==0xD7)contextJump++;
                                       for(i=contextJump;i<endofcontext;i++)
                                          {fprintf(fp3, "%c",context[i]);}
+                                      afterword=context[BEFORE-1];
+                                      if(context[BEFORE-1]=='\v'||context[BEFORE-1]=='\n'||context[BEFORE-1]=='\r')afterword=' ';
+                                      fprintf(fp3," </nowiki></br>@@@'''%s'''%c<nowiki>",typo,afterword);
                                       endofcontext=BEFORE;
-
                                       break;}
     if (strcmp(typo,milon[j])>0){min=j+1;}
     if (strcmp(typo,milon[j])<0){max=j-1;}
