@@ -7,7 +7,7 @@ int main()
 {
 int milon_count=0;
 int i=0,j=0,k=0,lll=0,existing=0,textflag=0,namecount=0,templateflag=1,linkflag=1,
-nameflag=0,spaceflag=1,namespaceflag=0,fileflag=1,fileflag2=1,imageflag=1;
+nameflag=0,spaceflag=1,namespaceflag=0,galleryflag=1,fileflag=1,fileflag2=1,imageflag=1;
 int aftercount=0,contextJump=0,endofcontext=BEFORE;
 char typo[80];
 char oldtypo[80];
@@ -21,7 +21,7 @@ milon = malloc (14000000 * sizeof(char[80]));
 int *exists;
 exists = malloc (14000000 * sizeof(int));
 //for(i=0;i<3000000;i++)exists[i]=0;
-FILE *fp1 = fopen("hewiki-20200401-pages-articles.xml", "r");
+FILE *fp1 = fopen("hewiki-20200420-pages-meta-current.xml", "r");
 FILE *fp2 = fopen("history.txt", "r");
 FILE *fp3 = fopen("file3.txt", "w");
 
@@ -70,7 +70,7 @@ if(nameflag==1&&c=='<'){pagename[namecount]=0;namecount=0;nameflag=0;}
 
 //close tags in new article
 if(nameflag==1)
-    {templateflag=1;spaceflag=1;linkflag=1;fileflag=1;fileflag2=1;imageflag=1;}
+    {templateflag=1;galleryflag=1;spaceflag=1;linkflag=1;fileflag=1;fileflag2=1;imageflag=1;}
 
 //only search within articles text
 if(context[BEFORE-4]=='<'&&context[BEFORE-3]=='t'&&
@@ -97,6 +97,12 @@ if(fileflag2==0&&c=='\n'){fileflag2=1;}
 if((context[BEFORE-5]=='I'||context[BEFORE-5]=='i')&&context[BEFORE-4]=='m'&&
    context[BEFORE-3]=='a'&&context[BEFORE-2]=='g'&&context[BEFORE-1]=='e'){typo[0]=0;imageflag=0;}
 if(imageflag==0&&c=='\n'){imageflag=1;}
+ //skip <gallery>
+if(context[BEFORE-4]==';'&&context[BEFORE-3]=='g'&&
+   context[BEFORE-2]=='a'&&context[BEFORE-1]=='l'&&c=='l'){typo[0]=0;galleryflag=0;}
+
+if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
+   context[BEFORE-3]=='g'&&context[BEFORE-2]=='a'&&context[BEFORE-1]=='l'&&c=='l'){galleryflag=1;}
 
   //skip templates
 if(context[BEFORE-1]=='{'&&c=='{'){templateflag=0;}
@@ -110,7 +116,7 @@ if(context[BEFORE-1]==']'&&c!=']'){linkflag=1;}
 for(i=0;i<BEFORE;i++){context[i]=context[i+1];}context[BEFORE-1]=c;
 if(k==79){spaceflag=0;break;}
 
-if(spaceflag==1&&namespaceflag==1&&textflag==1&&templateflag==1&&linkflag==1&&fileflag==1&&fileflag2==1&&imageflag==1)
+if(spaceflag==1&&namespaceflag==1&&galleryflag==1&&textflag==1&&templateflag==1&&linkflag==1&&fileflag==1&&fileflag2==1&&imageflag==1)
 { typo[k]=c;}
 
     //utf8 chars to separate words
