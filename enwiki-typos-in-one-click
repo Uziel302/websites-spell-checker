@@ -94,7 +94,7 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
                                 galleryflag = 1
                         if '/gallery' in word:
                                 galleryflag = 0
-	 		if '</Gallery' in word:
+	 		if '<Gallery' in word:
 				Galleryflag = 1
 			if '/Gallery' in word:
 				Galleryflag = 0	
