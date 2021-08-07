@@ -52,8 +52,9 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
 		if line[0][0] == ':':
 			continue
 		previous = next_ = ''
+		line = line.rstrip('\n')+' '
 		objects = re.split(r"([^a-zA-Z\[<\/]*\s+[^a-zA-Z\[<\/]*)", line)
-		l = len(objects)
+		l = len(objects)-2
 		for index, word in enumerate(objects):
 			if word == ' ':
 				continue
