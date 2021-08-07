@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import json 
+import json
+import re
 with open('dictionary.txt') as f: 
 	data = f.read()	   
 diction = json.loads(data) 
@@ -51,9 +52,11 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
 		if line[0][0] == ':':
 			continue
 		previous = next_ = ''
-		objects = line.split()
+		objects = re.split(r"([^a-zA-Z\[<\/]+)", line)
 		l = len(objects)
 		for index, word in enumerate(objects):
+			if word == ' ':
+				continue
 			if '}}' in word and templateflag > 0:
 				templateflag -= 1
 			if '{{' in word:
@@ -121,6 +124,8 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
 			if not word.isalpha():
 				continue
 			if word in diction:
+				before = ''
+				after = ''
 				f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
 				f.write(word+'-><!--')
 				fix = diction[word].split(",")[0].encode('utf-8')
@@ -128,14 +133,12 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
 				spot = int(diction[word].split(",")[2])+1
 				f.write(fix[:(spot-1)]+"'''"+fix[(spot-1)]+"'''"+fix[spot:]+'? (')
 				f.write(diction[word].split(",")[1]+') context: \n<nowiki>~~~ ')
-				for x in range(-6,1):
+				for x in range(-12,1):
 					if index+x >= 0 and index+x < l:
-						cont = objects[index+x]
-						f.write(cont+' ')
-				f.write('</nowiki></br>\n\'\'\''+word+'\'\'\' <nowiki>')
-				for x in range(1,6):
+						before += objects[index+x]
+				f.write(before+'</nowiki></br>\n\'\'\''+word+'\'\'\' <nowiki>')
+				for x in range(1,12):
 					if index+x >= 0 and index+x < l:
-						cont = objects[index+x]
-						f.write(cont+' ')
-				f.write(' ~~~</nowiki>')
+						after += objects[index+x]
+				f.write(after+' ~~~</nowiki>')
 f.close()
