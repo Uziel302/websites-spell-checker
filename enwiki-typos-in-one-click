@@ -53,7 +53,7 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
 			continue
 		previous = next_ = ''
 		line = line.rstrip('\n')+' '
-		objects = re.split(r"([\-{}\[,.\";\^~#\=&\)\|<>\?]*\s+[\-{}\[,.\";\^~#\=&\)\|<>\?]*)", line)
+		objects = re.split(r"([\-{}\[,.\";\^~#\=&\)\|<>\?]*\s+[\-{},.\";\^~#\=&\)\|>\?]*)", line)
 		l = len(objects)-2
 		for index, word in enumerate(objects):
 			if word == ' ':
