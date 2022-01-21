@@ -1,145 +1,208 @@
 # -*- coding: utf-8 -*-
 import json
 import re
-with open('dictionary.txt') as f: 
-	data = f.read()	   
-diction = json.loads(data) 
+
+with open('onlyaspell.txt') as f: 
+    diction = f.read().split(',')
+
+with open('engrem.txt') as f: 
+    engrem = f.read().split(',')
+
+def getVariations(word):
+    omit = {}
+    double = {}
+    swap = {}
+    swap2 = {}
+    replace = {}
+    #duplicating a letter
+    for x in range(len(word)):
+        double[(word[0 : x : ] + word[x] + word[x : :])] = x
+    #omiting a letter
+    for x in range(len(word)):
+        omit[(word[0 : x : ] + word[x + 1 : :])] = x
+    #swapping a letter
+    for x in range(len(word)-1):
+        swap[(word[0 : x : ] + word[x + 1] + word[x] + word[x + 2 : :])] = x
+    #swapping a 2nd letter
+    for x in range(len(word)-2):
+        swap2[(word[0 : x : ] + word[x + 2]  + word[x + 1] + word[x] + word[x + 3 : :])] = x
+    #replacing by another letter
+    for letter in 'aeiou':
+        for x in range(len(word)):
+            if word[x] in 'aeiou':
+                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
+    for letter in 'bcdfghjklmnpqrstvwxyz':
+        for x in range(len(word)):
+            if word[x] not in 'aeiou':
+                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
+    variations = {
+        'double': double,
+        'omit': omit,
+        'swap': swap,
+        'swap2': swap2,
+        'replace': replace
+    }
+    return variations
 
 mainstr = '<ns>0</ns>'
 endpage = '</page>'
 mainflag = 1
 textflag = 1
+typos = []
+checkedWords = []
 title = ''
 f = open('demofile2.txt', 'w')
 from bz2 import BZ2File
 with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xml.bz2','r') as file:
-	for line in file:
-		line = line.replace('&quot;','"')
-		line = line.replace('&lt;','<')
-		line = line.replace('&gt;','>')
-		line = line.replace('&amp;','&')
-		line = line.replace('&nbsp;',' ') 
-		fileflag = 0
-		quote2flag = 0
-		quoteflag = 0
-		if '<title>' in line:
-			title = line
-			if 'Azerb' in line:
-				print(line)
-			#reset flags on new article
-			templateflag = 0
-			externalflag = 0
-			refflag = 0
-			quote3flag = 0
-			commentflag = 0
-			divflag = 0
-			codeflag = 0
-			poemflag = 0
-			galleryflag = 0
-			Galleryflag = 0
-			sourceflag = 0
-		if '<text' in line:
-			textflag = 0
-		if textflag:
-			continue
-		if mainstr in line:
-			mainflag = 0
-			textflag = 1
-		if endpage in line:
-			mainflag = 1
-		if mainflag:
-			continue
-		if line[0][0] == ':':
-			continue
-		previous = next_ = ''
-		line = line.rstrip('\n')+' '
-		objects = re.split(r"([\-{}\[,.\";\^~#\=&\)\|<>\?]*\s+[\-{},.\";\^~#\=&\)\|>\?]*)", line)
-		l = len(objects)-2
-		for index, word in enumerate(objects):
-			if word == ' ':
-				continue
-			if '}}' in word and templateflag > 0:
-				templateflag -= 1
-			if '{{' in word:
-				templateflag += 1
-			if '[File' in word:
-				fileflag = 1
-			if '[file' in word:
-				fileflag = 1
-			if '[Image' in word:
-				fileflag = 1
-			if '[image' in word:
-				fileflag = 1
-			if ']' in word:
-				externalflag = 0
-			if '[h' in word:
-				externalflag = 1
-			if '<!--' in word:
-				commentflag = 1
-			if '-->' in word: 
-				commentflag = 0
-			if '<ref' in word:
-				refflag = 1
-			if '/ref' in word:
-				refflag = 0
-			if '<div' in word:
-				divflag = 1
-			if '/div' in word:
-				divflag = 0
-			if '<code' in word:
-				codeflag = 1
-			if '/code' in word:
-				codeflag = 0	
-			if '<poem' in word:
-				poemflag = 1
-			if '/poem' in word:
-				poemflag = 0
-                        if '<gallery' in word:
+#option to run on local env
+#with open('enwiki-20220101-pages-articles15.xml') as file:
+    for line in file:
+        line = line.replace('&quot;','"')
+        line = line.replace('&lt;','<')
+        line = line.replace('&gt;','>')
+        line = line.replace('&amp;','&')
+        line = line.replace('&nbsp;',' ') 
+        fileflag = 0
+        quote2flag = 0
+        quoteflag = 0
+        if '<title>' in line:
+            title = line
+            #reset flags on new article
+            templateflag = 0
+            externalflag = 0
+            refflag = 0
+            quote3flag = 0
+            commentflag = 0
+            divflag = 0
+            codeflag = 0
+            poemflag = 0
+            galleryflag = 0
+            Galleryflag = 0
+            sourceflag = 0
+        if '<text' in line:
+            textflag = 0
+        if textflag:
+            continue
+        if mainstr in line:
+            mainflag = 0
+            textflag = 1
+        if endpage in line:
+            mainflag = 1
+        if mainflag:
+            continue
+        if line[0][0] == ':':
+            continue
+        previous = next_ = ''
+        line = line.rstrip('\n')+' '
+        objects = re.split(r"([\-{}\[,.\";\^~#\=&\)\|<>\?]*\s+[\-{},.\";\^~#\=&\)\|>\?]*)", line)
+        l = len(objects)-2
+        for index, word in enumerate(objects):
+            if word == ' ':
+                continue
+            if '}}' in word and templateflag > 0:
+                templateflag -= 1
+            if '{{' in word:
+                templateflag += 1
+            if '[File' in word:
+                fileflag = 1
+            if '[file' in word:
+                fileflag = 1
+            if '[Image' in word:
+                fileflag = 1
+            if '[image' in word:
+                fileflag = 1
+            if ']' in word:
+                externalflag = 0
+            if '[h' in word:
+                externalflag = 1
+            if '<!--' in word:
+                commentflag = 1
+            if '-->' in word: 
+                commentflag = 0
+            if '<ref' in word:
+                refflag = 1
+            if '/ref' in word:
+                refflag = 0
+            if '<div' in word:
+                divflag = 1
+            if '/div' in word:
+                divflag = 0
+            if '<code' in word:
+                codeflag = 1
+            if '/code' in word:
+                codeflag = 0    
+            if '<poem' in word:
+                poemflag = 1
+            if '/poem' in word:
+                poemflag = 0
+            if '<gallery' in word:
                                 galleryflag = 1
-                        if '/gallery' in word:
+            if '/gallery' in word:
                                 galleryflag = 0
-	 		if '<Gallery' in word:
-				Galleryflag = 1
-			if '/Gallery' in word:
-				Galleryflag = 0	
-			if '<source' in word:
-				sourceflag = 1
-			if '/source' in word:
-				sourceflag = 0	
-			if '"' in word and not quoteflag:
-				quoteflag = 1
-				continue
-			if '"' in word and quoteflag:
-				quoteflag = 0
-			if '\'\'' in word and not quote2flag:
-				quote2flag = 1
-				continue
-			if '\'\'' in word and quote2flag:
-				quote2flag = 0
-			if '<block' in word:
-				quote3flag = 1
-			if '</block' in word:
-				quote3flag = 0
-			if templateflag or sourceflag or Galleryflag or galleryflag or poemflag or codeflag or divflag or quoteflag or quote2flag or quote3flag or commentflag or externalflag or fileflag or refflag:
-				continue
-			if not word.isalpha():
-				continue
-			if word in diction:
-				before = ''
-				after = ''
-				f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
-				f.write(word+'-><!--')
-				fix = diction[word].split(",")[0].encode('utf-8')
-				f.write(fix+'-->')
-				spot = int(diction[word].split(",")[2])+1
-				f.write(fix[:(spot-1)]+"'''"+fix[(spot-1)]+"'''"+fix[spot:]+'? (')
-				f.write(diction[word].split(",")[1]+') context: \n<nowiki>~~~ ')
-				for x in range(-12,1):
-					if index+x >= 0 and index+x < l:
-						before += objects[index+x]
-				f.write(before+' </nowiki></br>\n\'\'\''+word+'\'\'\' <nowiki>')
-				for x in range(1,12):
-					if index+x >= 0 and index+x < l:
-						after += objects[index+x]
-				f.write(after+' ~~~</nowiki>')
+            if '<Gallery' in word:
+                Galleryflag = 1
+            if '/Gallery' in word:
+                Galleryflag = 0    
+            if '<source' in word:
+                sourceflag = 1
+            if '/source' in word:
+                sourceflag = 0    
+            if '"' in word and not quoteflag:
+                quoteflag = 1
+                continue
+            if '"' in word and quoteflag:
+                quoteflag = 0
+            if '\'\'' in word and not quote2flag:
+                quote2flag = 1
+                continue
+            if '\'\'' in word and quote2flag:
+                quote2flag = 0
+            if '<block' in word:
+                quote3flag = 1
+            if '</block' in word:
+                quote3flag = 0
+            if templateflag or sourceflag or Galleryflag or galleryflag or poemflag or codeflag or divflag or quoteflag or quote2flag or quote3flag or commentflag or externalflag or fileflag or refflag:
+                continue
+            if not word.isalpha():
+                continue
+            if len(word) < 5:
+                continue
+            if not word.islower():
+                continue
+            if word in diction:
+                continue
+            #if the word without last s in dictionary
+            if word[0:len(word)-1:] and word[len(word)-1]=='s' and word[len(word)-2]!='s':
+                continue
+            if word in engrem:
+                continue
+            if word in checkedWords:
+                continue
+            checkedWords.append(word)
+            wordVariations = getVariations(word)
+            for variationType in wordVariations:
+                if word in typos:
+                    break
+                for variant in wordVariations[variationType]:
+                    if variant in diction:
+                        spot = wordVariations[variationType][variant]
+                        typos.append(word)
+                        before = ''
+                        after = ''
+                        f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
+                        if(spot == len(variant)):
+                            f.write(word+'-><!--'+ variant + '-->'+ variant[0 : spot-1 : ] + "'''" + variant[spot-1] + "'''")
+                        else:
+                            f.write(word+'-><!--'+ variant + '-->'+(variant[0 : spot : ] + "'''" + variant[spot] + "'''" + variant[spot+1:]))
+                        f.write('? (' + variationType + ') context: \n<nowiki>~~~ ')
+                        for x in range(-12,1):
+                            if index+x >= 0 and index+x < l:
+                                before += objects[index+x]
+                        f.write(before+' </nowiki><br>\n\'\'\''+word+'\'\'\' <nowiki>')
+                        for x in range(1,12):
+                            if index+x >= 0 and index+x < l:
+                                after += objects[index+x]
+                        f.write(after+' ~~~</nowiki>')
+                        f.flush()
+                        break
 f.close()
