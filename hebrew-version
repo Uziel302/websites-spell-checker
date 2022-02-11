@@ -1,0 +1,226 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import json
+import re
+
+with open('wikifreq.csv') as f: 
+    diction = f.read().split(',')
+
+with open('titlesremovedwikidata.txt') as f: 
+    hebRem = f.read().split(',')
+
+def getVariations(word):
+    omit = {}
+    double = {}
+    swap = {}
+    swap2 = {}
+    replace = {}
+    #duplicating a letter
+    for x in range(1,len(word),2):
+        double[(word[0 : x : ] + word[x] + '\xd7' + word[x : :])] = x
+    #omiting a letter
+    for x in range(1,len(word),2):
+        omit[(word[0 : x-1 : ] + word[x + 1 : :])] = x
+    #swapping a letter
+    for x in range(1,len(word)-2,2):
+        swap2[(word[0 : x : ] + word[x + 2]  + word[x + 1] + word[x] + word[x + 3 : :])] = x
+    #swapping a 2nd letter
+    for x in range(1,len(word)-4,2):
+        swap2[(word[0 : x : ] + word[x + 4]  + word[x + 1:x+4:] + word[x] + word[x + 5 : :])] = x
+    #replacing by another letter
+    for letter in ['\x90','\x94','\x95','\x99']:
+        for x in range(len(word)):
+            if word[x] in ['\x90','\x94','\x95','\x99']:
+                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
+    #בגדזחטכלמנסעפצקרשתךףםןץ
+    for letter in ['\x91','\x92','\x93','\x96','\x97','\x98','\x9b','\x9c','\x9e','\xa0','\xa1','\xa2','\xa4','\xa6','\xa7','\xa8','\xa9','\xaa','\x9a','\xa3','\x9d','\x9f','\xa5']:
+        for x in range(len(word)):
+            if word[x] not in ['\x90','\x94','\x95','\x99']:
+                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
+    variations = {
+        'double': double,
+        'omit': omit,
+        'swap': swap,
+        'swap2': swap2,
+        'replace': replace
+    }
+    return variations
+
+mainstr = '<ns>0</ns>'
+endpage = '</page>'
+mainflag = 1
+textflag = 1
+typos = []
+checkedWords = []
+title = ''
+f = open('demofile2.txt', 'w')
+#from bz2 import BZ2File
+#with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xml.bz2','r') as file:
+#option to run on local env
+with open('hewiki-20220120-pages-articles1.xml') as file:
+    for line in file:
+        line = line.replace('&quot;','"')
+        line = line.replace('&lt;','<')
+        line = line.replace('&gt;','>')
+        line = line.replace('&amp;','&')
+        line = line.replace('&nbsp;',' ') 
+        fileflag = 0
+        quote2flag = 0
+        quoteflag = 0
+        if '<title>' in line:
+            title = line
+            #reset flags on new article
+            templateflag = 0
+            externalflag = 0
+            refflag = 0
+            quote3flag = 0
+            commentflag = 0
+            divflag = 0
+            codeflag = 0
+            poemflag = 0
+            galleryflag = 0
+            Galleryflag = 0
+            sourceflag = 0
+        if '<text' in line:
+            textflag = 0
+        if textflag:
+            continue
+        if mainstr in line:
+            mainflag = 0
+            textflag = 1
+        if endpage in line:
+            mainflag = 1
+        if mainflag:
+            continue
+        if line[0][0] == ':':
+            continue
+        previous = next_ = ''
+        line = line.rstrip('\n')+' '
+        objects = re.split(r"([\-{}\[,.\";\^~#\=&\)\|<>\?]*\s+[\-{},.\";\^~#\=&\)\|>\?]*)", line)
+        l = len(objects)-2
+        for index, word in enumerate(objects):
+            if word == ' ':
+                continue
+            if '}}' in word and templateflag > 0:
+                templateflag -= 1
+            if '{{' in word:
+                templateflag += 1
+            if '[File' in word:
+                fileflag = 1
+            if '[file' in word:
+                fileflag = 1
+            if '[Image' in word:
+                fileflag = 1
+            if '[image' in word:
+                fileflag = 1
+            if ']' in word:
+                externalflag = 0
+            if '[h' in word:
+                externalflag = 1
+            if '<!--' in word:
+                commentflag = 1
+            if '-->' in word: 
+                commentflag = 0
+            if '<ref' in word:
+                refflag = 1
+            if '/ref' in word:
+                refflag = 0
+            if '<div' in word:
+                divflag = 1
+            if '/div' in word:
+                divflag = 0
+            if '<code' in word:
+                codeflag = 1
+            if '/code' in word:
+                codeflag = 0    
+            if '<poem' in word:
+                poemflag = 1
+            if '/poem' in word:
+                poemflag = 0
+            if '<gallery' in word:
+                                galleryflag = 1
+            if '/gallery' in word:
+                                galleryflag = 0
+            if '<Gallery' in word:
+                Galleryflag = 1
+            if '/Gallery' in word:
+                Galleryflag = 0    
+            if '<source' in word:
+                sourceflag = 1
+            if '/source' in word:
+                sourceflag = 0    
+            if '"' in word and not quoteflag:
+                quoteflag = 1
+                continue
+            if '"' in word and quoteflag:
+                quoteflag = 0
+            if '\'\'' in word and not quote2flag:
+                quote2flag = 1
+                continue
+            if '\'\'' in word and quote2flag:
+                quote2flag = 0
+            if '<block' in word:
+                quote3flag = 1
+            if '</block' in word:
+                quote3flag = 0
+            nonhebrew = 0
+            for x in range(len(word)):
+                if word[x] not in ['\xd7','\x90','\x94','\x95','\x99','\x91','\x92','\x93','\x96','\x97','\x98','\x9b','\x9c','\x9e','\xa0','\xa1','\xa2','\xa4','\xa6','\xa7','\xa8','\xa9','\xaa','\x9a','\xa3','\x9d','\x9f','\xa5']:
+                    nonhebrew = 1
+                    break
+            if nonhebrew or templateflag or sourceflag or Galleryflag or galleryflag or poemflag or codeflag or divflag or quoteflag or quote2flag or quote3flag or commentflag or externalflag or fileflag or refflag:
+                continue
+            if len(word) < 5:
+                continue
+            if word[0] != '\xd7':
+                continue
+            if '[' in word:
+                continue
+            if ']' in word:
+                continue
+            if ':' in word:
+                continue
+            if word in diction:
+                continue
+            if word in hebRem:
+                continue
+            if word in checkedWords:
+                continue
+            if word[1] in ['\x9e','\xa9','\x94','\x95','\x9b','\x9c','\x91']:
+                if word[2::] in diction:
+                    continue
+                if word[3] in ['\x9e','\xa9','\x94','\x95','\x9b','\x9c','\x91']:
+                    if word[4::] in diction:
+                        continue
+            if word[1] in ['\x9e','\xa9','\x94','\x95','\x9b','\x9c','\x91']:
+                if word[2::] in hebRem:
+                    continue
+                if word[3] in ['\x9e','\xa9','\x94','\x95','\x9b','\x9c','\x91']:
+                    if word[4::] in hebRem:
+                        continue
+            checkedWords.append(word)
+            wordVariations = getVariations(word)
+            for variationType in wordVariations:
+                if word in typos:
+                    break
+                for variant in wordVariations[variationType]:
+                    if variant in diction:
+                        print(word)
+                        spot = wordVariations[variationType][variant]
+                        typos.append(word)
+                        before = ''
+                        after = ''
+                        f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
+                        f.write(word+'->'+variant)
+                        f.write('? (' + variationType + ') context: \n<nowiki>~~~ ')
+                        for x in range(-12,1):
+                            if index+x >= 0 and index+x < l:
+                                before += objects[index+x]
+                        f.write(before+' </nowiki><br>\n\'\'\''+word+'\'\'\' <nowiki>')
+                        for x in range(1,12):
+                            if index+x >= 0 and index+x < l:
+                                after += objects[index+x]
+                        f.write(after+' ~~~</nowiki>')
+                        f.flush()
+                        break
+f.close()
