@@ -31,10 +31,6 @@ def getVariations(word):
         for x in range(len(word)):
             if word[x] in 'aeiou':
                 replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
-    for letter in 'bcdfghjklmnpqrstvwxyz':
-        for x in range(len(word)):
-            if word[x] not in 'aeiou':
-                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
     variations = {
         'double': double,
         'omit': omit,
@@ -44,51 +40,60 @@ def getVariations(word):
     }
     return variations
 
+def decodeLine(line):
+    line = line.replace('&quot;','"')
+    line = line.replace('&lt;','<')
+    line = line.replace('&gt;','>')
+    line = line.replace('&amp;','&')
+    line = line.replace('&nbsp;',' ')
+    return line
+
+class isScanFlags:
+    def __init__(self):
+        self.mainflag = 1
+        self.textflag = 1
+    def newArticleReset(self):
+        self.templateflag = 0
+        self.externalflag = 0
+        self.refflag = 0
+        self.fileflag = 0
+        self.quoteflag = 0
+        self.quote2flag = 0
+        self.quote3flag = 0
+        self.commentflag = 0
+        self.divflag = 0
+        self.codeflag = 0
+        self.poemflag = 0
+        self.galleryflag = 0
+        self.Galleryflag = 0
+        self.sourceflag = 0
+    
 mainstr = '<ns>0</ns>'
 endpage = '</page>'
-mainflag = 1
-textflag = 1
 typos = []
 checkedWords = []
 title = ''
 f = open('demofile2.txt', 'w')
-from bz2 import BZ2File
-with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xml.bz2','r') as file:
+#from bz2 import BZ2File
+#with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xml.bz2','r') as file:
 #option to run on local env
-#with open('enwiki-20220101-pages-articles15.xml') as file:
+with open('enwiki-20220301-pages-articles16.xml') as file:
+    flags = isScanFlags()
     for line in file:
-        line = line.replace('&quot;','"')
-        line = line.replace('&lt;','<')
-        line = line.replace('&gt;','>')
-        line = line.replace('&amp;','&')
-        line = line.replace('&nbsp;',' ') 
-        fileflag = 0
-        quote2flag = 0
-        quoteflag = 0
+        line = decodeLine(line)
         if '<title>' in line:
             title = line
-            #reset flags on new article
-            templateflag = 0
-            externalflag = 0
-            refflag = 0
-            quote3flag = 0
-            commentflag = 0
-            divflag = 0
-            codeflag = 0
-            poemflag = 0
-            galleryflag = 0
-            Galleryflag = 0
-            sourceflag = 0
+            flags.newArticleReset()
         if '<text' in line:
-            textflag = 0
-        if textflag:
+            flags.textflag = 0
+        if flags.textflag:
             continue
         if mainstr in line:
-            mainflag = 0
-            textflag = 1
+            flags.mainflag = 0
+            flags.textflag = 1
         if endpage in line:
-            mainflag = 1
-        if mainflag:
+            flags.mainflag = 1
+        if flags.mainflag:
             continue
         if line[0][0] == ':':
             continue
@@ -99,69 +104,69 @@ with BZ2File('/public/dumps/public/enwiki/latest/enwiki-latest-pages-articles.xm
         for index, word in enumerate(objects):
             if word == ' ':
                 continue
-            if '}}' in word and templateflag > 0:
-                templateflag -= 1
+            if '}}' in word and flags.templateflag > 0:
+                flags.templateflag -= 1
             if '{{' in word:
-                templateflag += 1
+                flags.templateflag += 1
             if '[File' in word:
-                fileflag = 1
+                flags.fileflag = 1
             if '[file' in word:
-                fileflag = 1
+                flags.fileflag = 1
             if '[Image' in word:
-                fileflag = 1
+                flags.fileflag = 1
             if '[image' in word:
-                fileflag = 1
+                flags.fileflag = 1
             if ']' in word:
-                externalflag = 0
+                flags.externalflag = 0
             if '[h' in word:
-                externalflag = 1
+                flags.externalflag = 1
             if '<!--' in word:
-                commentflag = 1
+                flags.commentflag = 1
             if '-->' in word: 
-                commentflag = 0
+                flags.commentflag = 0
             if '<ref' in word:
-                refflag = 1
+                flags.refflag = 1
             if '/ref' in word:
-                refflag = 0
+                flags.refflag = 0
             if '<div' in word:
-                divflag = 1
+                flags.divflag = 1
             if '/div' in word:
-                divflag = 0
+                flags.divflag = 0
             if '<code' in word:
-                codeflag = 1
+                flags.codeflag = 1
             if '/code' in word:
-                codeflag = 0    
+                flags.codeflag = 0    
             if '<poem' in word:
-                poemflag = 1
+                flags.poemflag = 1
             if '/poem' in word:
-                poemflag = 0
+                flags.poemflag = 0
             if '<gallery' in word:
-                                galleryflag = 1
+                flags.galleryflag = 1
             if '/gallery' in word:
-                                galleryflag = 0
+                flags.galleryflag = 0
             if '<Gallery' in word:
-                Galleryflag = 1
+                flags.Galleryflag = 1
             if '/Gallery' in word:
-                Galleryflag = 0    
+                flags.Galleryflag = 0    
             if '<source' in word:
-                sourceflag = 1
+                flags.sourceflag = 1
             if '/source' in word:
-                sourceflag = 0    
-            if '"' in word and not quoteflag:
-                quoteflag = 1
+                flags.sourceflag = 0    
+            if (word.count('"') % 2) and not flags.quoteflag:
+                flags.quoteflag = 1
                 continue
-            if '"' in word and quoteflag:
-                quoteflag = 0
-            if '\'\'' in word and not quote2flag:
-                quote2flag = 1
+            if (word.count('"') % 2) and flags.quoteflag:
+                flags.quoteflag = 0
+            if '\'\'' in word and not flags.quote2flag:
+                flags.quote2flag = 1
                 continue
-            if '\'\'' in word and quote2flag:
-                quote2flag = 0
+            if '\'\'' in word and flags.quote2flag:
+                flags.quote2flag = 0
             if '<block' in word:
-                quote3flag = 1
+                flags.quote3flag = 1
             if '</block' in word:
-                quote3flag = 0
-            if templateflag or sourceflag or Galleryflag or galleryflag or poemflag or codeflag or divflag or quoteflag or quote2flag or quote3flag or commentflag or externalflag or fileflag or refflag:
+                flags.quote3flag = 0
+            if flags.templateflag or flags.sourceflag or flags.Galleryflag or flags.galleryflag or flags.poemflag or flags.codeflag or flags.divflag or flags.quoteflag or flags.quote2flag or flags.quote3flag or flags.commentflag or flags.externalflag or flags.fileflag or flags.refflag:
                 continue
             if not word.isalpha():
                 continue
