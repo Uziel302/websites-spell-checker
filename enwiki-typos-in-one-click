@@ -1,44 +1,20 @@
 # -*- coding: utf-8 -*-
 import json
 import re
+import mysql.connector
+# Connecting to the Database
+mydb = mysql.connector.connect(
+  host ='localhost',
+  database ='variations',
+  user ='root',
+)
+cs = mydb.cursor()
 
 with open('onlyaspell.txt') as f: 
     diction = f.read().split(',')
 
 with open('engrem.txt') as f: 
     engrem = f.read().split(',')
-
-def getVariations(word):
-    omit = {}
-    double = {}
-    swap = {}
-    swap2 = {}
-    replace = {}
-    #duplicating a letter
-    for x in range(len(word)):
-        double[(word[0 : x : ] + word[x] + word[x : :])] = x
-    #omiting a letter
-    for x in range(len(word)):
-        omit[(word[0 : x : ] + word[x + 1 : :])] = x
-    #swapping a letter
-    for x in range(len(word)-1):
-        swap[(word[0 : x : ] + word[x + 1] + word[x] + word[x + 2 : :])] = x
-    #swapping a 2nd letter
-    for x in range(len(word)-2):
-        swap2[(word[0 : x : ] + word[x + 2]  + word[x + 1] + word[x] + word[x + 3 : :])] = x
-    #replacing by another letter
-    for letter in 'aeiou':
-        for x in range(len(word)):
-            if word[x] in 'aeiou':
-                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
-    variations = {
-        'double': double,
-        'omit': omit,
-        'swap': swap,
-        'swap2': swap2,
-        'replace': replace
-    }
-    return variations
 
 def decodeLine(line):
     line = line.replace('&quot;','"')
@@ -184,30 +160,32 @@ with open('enwiki-20220301-pages-articles16.xml') as file:
             if word in checkedWords:
                 continue
             checkedWords.append(word)
-            wordVariations = getVariations(word)
-            for variationType in wordVariations:
+            statement = "SELECT * FROM variations WHERE typo='"+word+"' AND wiktion is null AND isvalid=0"
+            cs.execute(statement)
+            row = cs.fetchall()
+            if(row):
                 if word in typos:
                     break
-                for variant in wordVariations[variationType]:
-                    if variant in diction:
-                        spot = wordVariations[variationType][variant]
-                        typos.append(word)
-                        before = ''
-                        after = ''
-                        f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
-                        if(spot == len(variant)):
-                            f.write(word+'-><!--'+ variant + '-->'+ variant[0 : spot-1 : ] + "'''" + variant[spot-1] + "'''")
-                        else:
-                            f.write(word+'-><!--'+ variant + '-->'+(variant[0 : spot : ] + "'''" + variant[spot] + "'''" + variant[spot+1:]))
-                        f.write('? (' + variationType + ') context: \n<nowiki>~~~ ')
-                        for x in range(-12,1):
-                            if index+x >= 0 and index+x < l:
-                                before += objects[index+x]
-                        f.write(before+' </nowiki><br>\n\'\'\''+word+'\'\'\' <nowiki>')
-                        for x in range(1,12):
-                            if index+x >= 0 and index+x < l:
-                                after += objects[index+x]
-                        f.write(after+' ~~~</nowiki>')
-                        f.flush()
-                        break
+                spot = row[0][4]
+                variant = row[0][2]
+                variationType = row[0][3]
+                typos.append(word)
+                before = ''
+                after = ''
+                f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
+                if(spot == len(variant)):
+                    f.write(word+'-><!--'+ variant + '-->'+ variant[0 : spot-1 : ] + "'''" + variant[spot-1] + "'''")
+                else:
+                    f.write(word+'-><!--'+ variant + '-->'+(variant[0 : spot : ] + "'''" + variant[spot] + "'''" + variant[spot+1:]))
+                f.write('? (' + variationType + ') context: \n<nowiki>~~~ ')
+                for x in range(-12,1):
+                    if index+x >= 0 and index+x < l:
+                        before += objects[index+x]
+                f.write(before+' </nowiki><br>\n\'\'\''+word+'\'\'\' <nowiki>')
+                for x in range(1,12):
+                    if index+x >= 0 and index+x < l:
+                        after += objects[index+x]
+                f.write(after+' ~~~</nowiki>')
+                f.flush()
+                break
 f.close()
