@@ -1,7 +1,7 @@
 # websites-spell-checker
 For large amounts of texts, with less false positives
 
-Spell checkers have been around since the 1960s and they are still part of the largest editors: Microsoft Office, Google Drive, Google Chrome, Gmail and many others.
+Spell checkers have been around since the 1960s and they are still part of the largest text editors: Microsoft Office,  Google Chrome, mail clients and many others.
 
 I hate typos, but I also don't like the common spell checkers:
 -They mark any unknown word as a typo. 
