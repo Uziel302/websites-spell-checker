@@ -227,6 +227,7 @@ while(max>=min){
                                       if(strlen(number)==1)place=number[0]-48;
                                       if(strlen(number)==2)place=number[1]-38;
                                       fprintf(fp3, "\n$$$%s-><!--%s-->", typo,p);
+                                      printf("\n$$$%s-><!--%s-->", typo,p);
                                       for(i=0;i<strlen(p);i++){
                                         if(i==place)fprintf(fp3, "'''%c'''",p[i]);
                                         if(i!=place)fprintf(fp3, "%c",p[i]);
@@ -248,11 +249,9 @@ while(max>=min){
                                       if((BEFORE-contextJump)<strlen(typo)+3)fprintf(fp3, "jjjjjj");
                                       //if no jump happened and char before it 0xD7, move one further
                                       if(contextJump==1&&(unsigned char)context[0]==0xD7)contextJump++;
-                                      for(i=contextJump;i<endofcontext;i++)
+                                      for(i=contextJump;i<endofcontext-1;i++)
                                          {fprintf(fp3, "%c",context[i]);}
-                                      afterword=context[BEFORE-1];
-                                      if(context[BEFORE-1]=='\v'||context[BEFORE-1]=='\n'||context[BEFORE-1]=='\r')afterword=' ';
-                                      fprintf(fp3," </nowiki></br>@@@'''%s'''%c<nowiki>",typo,afterword);
+                                      fprintf(fp3," </nowiki></br>@@@'''%s''' <nowiki>",typo);
                                       endofcontext=BEFORE;
                                       break;}
     if (strcmp(typo,milon[j])>0){min=j+1;}
