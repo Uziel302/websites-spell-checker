@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define BEFORE 30
+#define BEFORE 70
 #define AFTER 150
 int main()
 {
@@ -22,14 +22,14 @@ int place=0;
 char lastchar=0,lastchar2;
 char (*milon)[41];
 char context[BEFORE];
-milon = calloc (19000000, sizeof(char[41]));
+milon = calloc (22000000, sizeof(char[41]));
 int *exists;
-exists = malloc (19000000 * sizeof(int));
+exists = malloc (22000000 * sizeof(int));
 
 //for(i=0;i<33000000;i++)exists[i]=0;
 // to access character i of word w
-FILE *fp1 = fopen("enwikibooks-20191201-pages-articles.xml", "r");
-FILE *fp2 = fopen("33mcorrections.txt", "r");
+FILE *fp1 = fopen("Wikipedia-20220611024629.xml", "r");
+FILE *fp2 = fopen("typos.txt", "r");
 FILE *fp3 = fopen("file3.txt", "w");
 
 if (fp1 == NULL || fp2 == NULL || fp3 == NULL )
@@ -44,13 +44,13 @@ char c;
 while ((c = fgetc(fp2)) != EOF) //load main milon
 {
 milon[j][k]=c;
-if(j==19000000)break;
+if(j==22000000)break;
 if(k>39&&c!='\n')continue;
 if(c==',')milon[j][k]=0;
 if(c=='\n'){milon[j][k]=0;milon_count++;j++;k=0;}//end of word - move to next word
 if (c!='\n')k++;
 }
-printf("WOW1");
+printf("WOW");
 
 j=0;
 c=0;
@@ -227,7 +227,7 @@ while(max>=min){
                                       if(strlen(number)==1)place=number[0]-48;
                                       if(strlen(number)==2)place=number[1]-38;
                                       fprintf(fp3, "\n$$$%s-><!--%s-->", typo,p);
-                                      printf("\n$$$%s-><!--%s-->", typo,p);
+                                      //printf("\n$$$%s-><!--%s-->", typo,p);
                                       for(i=0;i<strlen(p);i++){
                                         if(i==place)fprintf(fp3, "'''%c'''",p[i]);
                                         if(i!=place)fprintf(fp3, "%c",p[i]);
@@ -235,6 +235,15 @@ while(max>=min){
                                       fprintf(fp3, "? (%s) context: $@$@ ~~~</nowiki>&&&== [[%s]] ==###<nowiki>~~~ ",method,pagename);
                                       aftercount=AFTER;
                                       contextJump=1;
+
+                                       //start context line after at least one space
+                                      for(i=0;i<BEFORE-2;i++) {
+                                         printf("\n%d %c\n",i,context[i]);
+                                              if(context[i]=='\v'||context[i]==' '||
+                                                 context[i]=='\n'||context[i]=='\r')
+                                                 {printf("\n%d\n",i);
+                                                    contextJump=i+1;break;}
+                                       }
                                       //if there is newline, start after it
                                       for(i=BEFORE-2;i>0;i--)
                                           {
@@ -260,7 +269,7 @@ while(max>=min){
 //if(lll%1000000000==0){for(i=0;i<700000;i++){if(exists[i])fprintf(fp3, "\n%s - %d", milon[i],exists[i]);}break;}
 }
 
-for(i=0;i<19000000;i++){
+for(i=0;i<22000000;i++){
         if(exists[i])fprintf(fp3, "\n%s - %d", milon[i],exists[i]);}
 
 fprintf(fp3,"\nFinally!");
