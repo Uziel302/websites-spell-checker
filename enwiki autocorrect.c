@@ -238,7 +238,6 @@ while(max>=min){
 
                                        //start context line after at least one space
                                       for(i=0;i<BEFORE-2;i++) {
-                                         printf("\n%d %c\n",i,context[i]);
                                               if(context[i]=='\v'||context[i]==' '||
                                                  context[i]=='\n'||context[i]=='\r')
                                                  {contextJump=i+1;break;}
