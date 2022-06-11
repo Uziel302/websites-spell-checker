@@ -241,8 +241,7 @@ while(max>=min){
                                          printf("\n%d %c\n",i,context[i]);
                                               if(context[i]=='\v'||context[i]==' '||
                                                  context[i]=='\n'||context[i]=='\r')
-                                                 {printf("\n%d\n",i);
-                                                    contextJump=i+1;break;}
+                                                 {contextJump=i+1;break;}
                                        }
                                       //if there is newline, start after it
                                       for(i=BEFORE-2;i>0;i--)
