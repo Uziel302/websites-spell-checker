@@ -20,15 +20,15 @@ char *method;
 char *number;
 int place=0;
 char lastchar=0,lastchar2;
-char (*milon)[41];
+char (*milon)[51];
 char context[BEFORE];
-milon = calloc (22000000, sizeof(char[41]));
+milon = calloc (22000000, sizeof(char[51]));
 int *exists;
 exists = malloc (22000000 * sizeof(int));
 
 //for(i=0;i<33000000;i++)exists[i]=0;
 // to access character i of word w
-FILE *fp1 = fopen("Wikipedia-20220611024629.xml", "r");
+FILE *fp1 = fopen("Wikipedia-20220701120534.xml", "r");
 FILE *fp2 = fopen("typos.txt", "r");
 FILE *fp3 = fopen("file3.txt", "w");
 
@@ -45,7 +45,7 @@ while ((c = fgetc(fp2)) != EOF) //load main milon
 {
 milon[j][k]=c;
 if(j==22000000)break;
-if(k>39&&c!='\n')continue;
+if(k>49&&c!='\n')continue;
 if(c==',')milon[j][k]=0;
 if(c=='\n'){milon[j][k]=0;milon_count++;j++;k=0;}//end of word - move to next word
 if (c!='\n')k++;
@@ -227,7 +227,6 @@ while(max>=min){
                                       if(strlen(number)==1)place=number[0]-48;
                                       if(strlen(number)==2)place=number[1]-38;
                                       fprintf(fp3, "\n$$$%s-><!--%s-->", typo,p);
-                                      //printf("\n$$$%s-><!--%s-->", typo,p);
                                       for(i=0;i<strlen(p);i++){
                                         if(i==place)fprintf(fp3, "'''%c'''",p[i]);
                                         if(i!=place)fprintf(fp3, "%c",p[i]);
