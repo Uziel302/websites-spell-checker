@@ -3,6 +3,12 @@
 #include <string.h>
 #define BEFORE 70
 #define AFTER 150
+
+int found(const char *context,const char *text) {
+   int l = strlen(text); 
+   return strncmp(text, context+BEFORE-l, l) == 0;
+}
+
 int main()
 {
    int milon_count=0;
@@ -27,8 +33,8 @@ int main()
    exists = malloc (22000000 * sizeof(int));
 
    // to access character i of word w
-   FILE *fp1 = fopen("Wikipedia-20220701120534.xml", "r");
-   FILE *fp2 = fopen("typos1.txt", "r");
+   FILE *fp1 = fopen("enwiki-20220701-pages-articles.xml", "r");
+   FILE *fp2 = fopen("typos.txt", "r");
    FILE *fp3 = fopen("file3.txt", "w");
 
    if (fp1 == NULL || fp2 == NULL || fp3 == NULL )
@@ -49,7 +55,6 @@ int main()
       if(c=='\n'){milon[j][k]=0;milon_count++;j++;k=0;} //end of word - move to next word
       if (c!='\n')k++;
    }
-   printf("WOW");
 
    j=0;
    c=0;
@@ -63,8 +68,9 @@ int main()
       }
 
       //save article name: if <title>
-      if(context[BEFORE-7]=='<'&&context[BEFORE-6]=='t'&&context[BEFORE-5]=='i'&&
-         context[BEFORE-4]=='t'&&context[BEFORE-3]=='l'&&context[BEFORE-2]=='e'&&context[BEFORE-1]=='>')nameflag=1;
+      if(found(context,"<title>")){
+         nameflag=1;
+      }
 
       if(nameflag==1){pagename[namecount]=c;namecount++;}
       if(nameflag==1&&context[BEFORE-1]=='<'&&c=='/'){pagename[namecount-2]=0;namecount=0;nameflag=0;}
@@ -74,116 +80,70 @@ int main()
          {divflag=1;codeflag=1;galleryflag=1;templateflag=1;doublenewline=1;
                   columnsflag=1;sourceflag=1;noteflag=1;noteflag2=1;}
       //only search within articles text
-      if(context[BEFORE-4]=='<'&&context[BEFORE-3]=='t'&&
-         context[BEFORE-2]=='e'&&context[BEFORE-1]=='x'&&c=='t'){textflag=1;}
-
-      if(context[BEFORE-5]=='<'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='t'&&context[BEFORE-2]=='e'&&context[BEFORE-1]=='x'&&c=='t'){typo[0]=0;textflag=0;}
-
+      if(found(context,"<text")){textflag=1;}
+      if(found(context,"</text")){typo[0]=0;textflag=0;}
       //only search namespace 0
-      if(context[BEFORE-4]=='<'&&context[BEFORE-3]=='n'&&
-         context[BEFORE-2]=='s'&&context[BEFORE-1]=='>'&&c=='0'){namespaceflag=1;}
-
-      if(context[BEFORE-4]=='<'&&context[BEFORE-3]=='n'&&
-         context[BEFORE-2]=='s'&&context[BEFORE-1]=='>'&&c!='0'){typo[0]=0;namespaceflag=0;}
-
-         //skip files
-      if((context[BEFORE-4]=='F'||context[BEFORE-4]=='f')&&context[BEFORE-3]=='i'&&
-         context[BEFORE-2]=='l'&&context[BEFORE-1]=='e'){typo[0]=0;fileflag=0;}
+      if(found(context,"<ns>")){
+         if(c=='0'){namespaceflag=1;}
+         else{typo[0]=0;namespaceflag=0;}
+      }
+      //skip files
+      if(found(context,"File") || found(context,"file")){typo[0]=0;fileflag=0;}
       if(fileflag==0&&c=='\n'){fileflag=1;}
-
-         //skip files
-      if((context[BEFORE-5]=='I'||context[BEFORE-5]=='i')&&context[BEFORE-4]=='m'&&
-         context[BEFORE-3]=='a'&&context[BEFORE-2]=='g'&&context[BEFORE-1]=='e'){typo[0]=0;imageflag=0;}
+      if(found(context,"Image") || found(context,"image")){typo[0]=0;imageflag=0;}
       if(imageflag==0&&c=='\n'){imageflag=1;}
-
-         //skip templates
-      if(context[BEFORE-1]=='{'&&c=='{'){typo[0]=0;doublenewline=0;templateflag=0;}
+      //skip templates
+      if(found(context,"{{")){typo[0]=0;doublenewline=0;templateflag=0;}
       if(context[BEFORE-1]=='}'&&c!='}'){templateflag=1;}
-      if(context[BEFORE-1]=='\n'&&c=='\n'){doublenewline=1;}
-         //skip links
-      if(context[BEFORE-1]=='['&&c=='h'){typo[0]=0;linkflag=0;}
+      if(found(context,"\n\n")){doublenewline=1;}
+      //skip links
+      if(found(context,"[h")){typo[0]=0;linkflag=0;}
       if(linkflag==0&&c==']'){linkflag=1;}
       if(linkflag==0&&c=='\n'){linkflag=1;}
-
-         //skip blockquotes
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='b'&&
-         context[BEFORE-2]=='l'&&context[BEFORE-1]=='o'&&c=='c'){typo[0]=0;k=0;quoteflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='b'&&context[BEFORE-2]=='l'&&context[BEFORE-1]=='o'&&c=='c'){typo[0]=0;quoteflag=1;}
-
+      //skip blockquotes
+      if(found(context,";bloc")){typo[0]=0;quoteflag=0;}
+      if(found(context,";/bloc")){typo[0]=0;quoteflag=1;}
       if(nameflag==1){quoteflag=1;}
-
-         //skip doublequotes
+      //skip doublequotes
       if(context[BEFORE-1]=='"'){typo[0]=0;doublequoteflag=0;}
       if(doublequoteflag==0&&c=='"'){doublequoteflag=1;}
       if(doublequoteflag==0&&c=='\n'){doublequoteflag=1;}
-
-         //skip doublequotes2
-      if(context[BEFORE-5]=='&'&&context[BEFORE-4]=='q'&&context[BEFORE-3]=='u'&&
-         context[BEFORE-2]=='o'&&context[BEFORE-1]=='t'&&c==';'){typo[0]=0;doublequoteflag2=0;}
-
-      if(context[BEFORE-4]=='&'&&context[BEFORE-3]=='q'&&context[BEFORE-2]=='u'&&context[BEFORE-1]=='o'&&c=='t')
-         {doublequoteflag2=1;}
+      //skip doublequotes2
+      if(found(context,"&quot;")){typo[0]=0;doublequoteflag2=0;}
+      if(found(context,"&quot")){doublequoteflag2=1;}
       if(doublequoteflag2==0&&c=='\n'){doublequoteflag2=1;}
-         //skip italics
-      if(context[BEFORE-2]=='\''&&context[BEFORE-1]=='\''){typo[0]=0;italicflag=0;}
-
+      //skip italics
+      if(found(context,"\'\'")){typo[0]=0;italicflag=0;}
       if(context[BEFORE-1]=='\''&&c=='\''){italicflag=1;}
       if(italicflag==0&&c=='\n'){italicflag=1;}
-
       //skip columns
-      if(context[BEFORE-1]=='{'&&c=='|'){typo[0]=0;columnsflag=0;}
-      if(context[BEFORE-1]=='|'&&c=='}'){columnsflag=1;}
+      if(found(context,"{|")){typo[0]=0;columnsflag=0;}
+      if(found(context,"|}")){columnsflag=1;}
       //skip notes
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='r'&&
-         context[BEFORE-2]=='e'&&context[BEFORE-1]=='f'){typo[0]=0;noteflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='r'&&context[BEFORE-2]=='e'&&context[BEFORE-1]=='f'&&c=='&'){noteflag=1;}
+      if(found(context,";ref")){typo[0]=0;noteflag=0;}
+      if(found(context,";/ref&")){noteflag=1;}
       //skip notes
-      if(context[BEFORE-3]==';'&&
-         context[BEFORE-2]=='!'&&context[BEFORE-1]=='-'&&c=='-'){typo[0]=0;noteflag2=0;}
-
-      if(context[BEFORE-2]=='-'&&context[BEFORE-1]=='-'&&c=='&'){noteflag2=1;}
+      if(found(context,";!--")){typo[0]=0;noteflag2=0;}
+      if(found(context,"--&gt;")){noteflag2=1;}
       //skip div
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='d'&&
-         context[BEFORE-2]=='i'&&context[BEFORE-1]=='v'){typo[0]=0;divflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='d'&&context[BEFORE-2]=='i'&&context[BEFORE-1]=='v'&&c=='&'){divflag=1;}
+      if(found(context,";div")){typo[0]=0;divflag=0;}
+      if(found(context,";/div&")){divflag=1;}
       //skip <code>
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='c'&&
-         context[BEFORE-2]=='o'&&context[BEFORE-1]=='d'&&c=='e'){typo[0]=0;codeflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='c'&&context[BEFORE-2]=='o'&&context[BEFORE-1]=='d'&&c=='e'){codeflag=1;}
-
+      if(found(context,";code")){typo[0]=0;codeflag=0;}
+      if(found(context,";/code")){codeflag=1;}
       //skip <poem>
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='p'&&
-         context[BEFORE-2]=='o'&&context[BEFORE-1]=='e'&&c=='m'){typo[0]=0;poemflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='p'&&context[BEFORE-2]=='o'&&context[BEFORE-1]=='e'&&c=='m'){poemflag=1;}
+      if(found(context,";poem")){typo[0]=0;poemflag=0;}
+      if(found(context,";/poem")){poemflag=1;}
       //skip <gallery>
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='g'&&
-         context[BEFORE-2]=='a'&&context[BEFORE-1]=='l'&&c=='l'){typo[0]=0;galleryflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='g'&&context[BEFORE-2]=='a'&&context[BEFORE-1]=='l'&&c=='l'){galleryflag=1;}
+      if(found(context,";gallery")){typo[0]=0;galleryflag=0;}
+      if(found(context,";/gallery")){galleryflag=1;}     
       //skip <source>
-      if(context[BEFORE-4]==';'&&context[BEFORE-3]=='s'&&
-         context[BEFORE-2]=='o'&&context[BEFORE-1]=='u'&&c=='r'){typo[0]=0;sourceflag=0;}
-
-      if(context[BEFORE-5]==';'&&context[BEFORE-4]=='/'&&
-         context[BEFORE-3]=='s'&&context[BEFORE-2]=='o'&&context[BEFORE-1]=='u'&&c=='r'){sourceflag=1;}
-
+      if(found(context,";source")){typo[0]=0;sourceflag=0;}
+      if(found(context,";/source")){sourceflag=1;}
 
       //save context
       for(i=0;i<BEFORE;i++){context[i]=context[i+1];}
       context[BEFORE-1]=c;
-
 
       if(k==79){spaceflag=0;break;}
 
