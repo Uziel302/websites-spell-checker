@@ -250,21 +250,25 @@ int main()
                      contextJump=i+1;break;
                }
             }
-            if(context[BEFORE-1]=='\v'||
-               context[BEFORE-1]=='&'||context[BEFORE-1]==';'||
-               context[BEFORE-1]=='\n'||context[BEFORE-1]=='\r'){
-                  endofcontext--;
-            }
+
             //if jumped more than word length, print word
             if((BEFORE-contextJump)<strlen(typo)+3)fprintf(fp3, "jjjjjj");
             //if no jump happened and char before it 0xD7, move one further
             if(contextJump==1&&(unsigned char)context[0]==0xD7)contextJump++;
             for(i=contextJump;i<endofcontext-1;i++) {
-               fprintf(fp3, "%c",context[i]);
+               fprintf(fp3, "%c", context[i]);
             }
-            fprintf(fp3," </nowiki></br>@@@'''%s'''%c <nowiki>", typo, context[endofcontext-1]);
+
+            fprintf(fp3," </nowiki></br>@@@'''%s'''", typo);
+            if(context[BEFORE-1]!='\v'&&context[BEFORE-1]!=' '&&
+               context[BEFORE-1]!='&'&&context[BEFORE-1]!=';'&&
+               context[BEFORE-1]!='\n'&&context[BEFORE-1]!='\r'){
+                  fprintf(fp3,"%c", context[endofcontext-1]);
+            }
+            fprintf(fp3," <nowiki>");
             endofcontext=BEFORE;
-            break;}
+            break;
+         }
          if (strcmp(typo,milon[j])>0){min=j+1;}
          if (strcmp(typo,milon[j])<0){max=j-1;}
       }
