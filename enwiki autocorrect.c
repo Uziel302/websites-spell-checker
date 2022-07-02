@@ -58,9 +58,9 @@ int main()
    while ((c = fgetc(fp1))!=EOF){//letter loop
       //print after context
       if(aftercount>0){
-                        if(aftercount==1&&(unsigned char)c==0xD7)aftercount=0;
-                        if(aftercount>0&&c!='\n'){fprintf(fp3, "%c", c); aftercount--;}
-                     }
+         if(aftercount==1&&(unsigned char)c==0xD7)aftercount=0;
+         if(aftercount>0&&c!='\n'){fprintf(fp3, "%c", c); aftercount--;}
+      }
 
       //save article name: if <title>
       if(context[BEFORE-7]=='<'&&context[BEFORE-6]=='t'&&context[BEFORE-5]=='i'&&
@@ -259,9 +259,10 @@ int main()
             if((BEFORE-contextJump)<strlen(typo)+3)fprintf(fp3, "jjjjjj");
             //if no jump happened and char before it 0xD7, move one further
             if(contextJump==1&&(unsigned char)context[0]==0xD7)contextJump++;
-            for(i=contextJump;i<endofcontext-1;i++)
-               {fprintf(fp3, "%c",context[i]);}
-            fprintf(fp3," </nowiki></br>@@@'''%s''' <nowiki>",typo);
+            for(i=contextJump;i<endofcontext-1;i++) {
+               fprintf(fp3, "%c",context[i]);
+            }
+            fprintf(fp3," </nowiki></br>@@@'''%s'''%c <nowiki>", typo, context[endofcontext-1]);
             endofcontext=BEFORE;
             break;}
          if (strcmp(typo,milon[j])>0){min=j+1;}
