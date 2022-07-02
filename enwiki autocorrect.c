@@ -20,9 +20,9 @@ int main()
    char *number;
    int place=0;
    char lastchar=0,lastchar2;
-   char (*milon)[51];
+   char (*milon)[61];
    char context[BEFORE];
-   milon = calloc (22000000, sizeof(char[51]));
+   milon = calloc (22000000, sizeof(char[61]));
    int *exists;
    exists = malloc (22000000 * sizeof(int));
 
@@ -44,7 +44,7 @@ int main()
    {
       milon[j][k]=c;
       if(j==22000000)break;
-      if(k>49&&c!='\n')continue;
+      if(k>59&&c!='\n')continue;
       if(c==',')milon[j][k]=0;
       if(c=='\n'){milon[j][k]=0;milon_count++;j++;k=0;} //end of word - move to next word
       if (c!='\n')k++;
@@ -222,12 +222,15 @@ int main()
             p=milon[j]+strlen(milon[j])+1;
             method=p+strlen(p)+1;
             number=method+strlen(method)+1;
-            if(strlen(number)==1)place=number[0]-48;
-            if(strlen(number)==2)place=number[1]-38;
+            place=atoi(number);
             fprintf(fp3, "\n$$$%s-><!--%s-->", typo,p);
             for(i=0;i<strlen(p);i++){
-               if(i==place)fprintf(fp3, "'''%c'''",p[i]);
-               if(i!=place)fprintf(fp3, "%c",p[i]);
+               if(i==place){
+                  fprintf(fp3, "'''%c'''",p[i]);
+               }
+               if(i!=place){
+                  fprintf(fp3, "%c",p[i]);
+               }
             }
             fprintf(fp3, "? (%s) context: $@$@ ~~~</nowiki>&&&== [[%s]] ==###<nowiki>~~~ ",method,pagename);
             aftercount=AFTER;
