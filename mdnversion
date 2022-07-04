@@ -1,50 +1,41 @@
-import os
 # -*- coding: utf-8 -*-
+import os
 import json
 import re
 
-with open('onlyaspell.txt') as f: 
-    diction = f.read().split(',')
+def decodeLine(line):
+    line = line.replace('&quot;','"')
+    line = line.replace('&lt;','<')
+    line = line.replace('&gt;','>')
+    line = line.replace('&amp;','&')
+    line = line.replace('&nbsp;',' ')
+    line = line.replace('&mdash;','—')
+    return line
 
-with open('engrem.txt') as f: 
-    engrem = f.read().split(',')
+with open('fixes2.txt') as f: 
+	data = f.read()	   
+diction = json.loads(data) 
 
-def getVariations(word):
-    omit = {}
-    double = {}
-    swap = {}
-    swap2 = {}
-    replace = {}
-    #duplicating a letter
-    for x in range(len(word)):
-        double[(word[0 : x : ] + word[x] + word[x : :])] = x
-    #omiting a letter
-    for x in range(len(word)):
-        omit[(word[0 : x : ] + word[x + 1 : :])] = x
-    #swapping a letter
-    for x in range(len(word)-1):
-        swap[(word[0 : x : ] + word[x + 1] + word[x] + word[x + 2 : :])] = x
-    #swapping a 2nd letter
-    for x in range(len(word)-2):
-        swap2[(word[0 : x : ] + word[x + 2]  + word[x + 1] + word[x] + word[x + 3 : :])] = x
-    #replacing by another letter
-    for letter in 'aeiou':
-        for x in range(len(word)):
-            if word[x] in 'aeiou':
-                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
-    for letter in 'bcdfghjklmnpqrstvwxyz':
-        for x in range(len(word)):
-            if word[x] not in 'aeiou':
-                replace[(word[0 : x : ] + letter + word[x + 1 : :])] = x
-    variations = {
-        'double': double,
-        'omit': omit,
-        'swap': swap,
-        'swap2': swap2,
-        'replace': replace
-    }
-    return variations
-
+class isScanFlags:
+    def __init__(self):
+        self.mainflag = 1
+        self.textflag = 1
+    def newArticleReset(self):
+        self.templateflag = 0
+        self.externalflag = 0
+        self.refflag = 0
+        self.fileflag = 0
+        self.quoteflag = 0
+        self.quote2flag = 0
+        self.quote3flag = 0
+        self.commentflag = 0
+        self.divflag = 0
+        self.codeflag = 0
+        self.poemflag = 0
+        self.galleryflag = 0
+        self.Galleryflag = 0
+        self.sourceflag = 0
+    
 mainstr = '<ns>0</ns>'
 endpage = '</page>'
 mainflag = 1
@@ -53,19 +44,18 @@ typos = []
 checkedWords = []
 title = ''
 f = open('demofile2.txt', 'w')
-rootdir = '/Users/mbpmbp/Downloads/content-main/files/en-us/'
-
+flags = isScanFlags()
+rootdir = '/Users/mbpmbp/Documents/GitHub/content'
 for subdir, dirs, files in os.walk(rootdir):
     for file in files:
         if file == '_wikihistory.json':
             continue
+        #flags.newArticleReset()
         with open(os.path.join(subdir, file)) as textfile:
+            if '.md' not in textfile.name:
+                continue
             for line in textfile:
-                line = line.replace('&quot;','"')
-                line = line.replace('&lt;','<')
-                line = line.replace('&gt;','>')
-                line = line.replace('&amp;','&')
-                line = line.replace('&nbsp;',' ') 
+                line = decodeLine(line)
                 fileflag = 0
                 quote2flag = 0
                 quoteflag = 0
@@ -82,40 +72,18 @@ for subdir, dirs, files in os.walk(rootdir):
                         continue
                     if not word.islower():
                         continue
-                    if word in diction:
-                        continue
-                    #if the word without last s in dictionary
-                    if word[0:len(word)-1:] and word[len(word)-1]=='s' and word[len(word)-2]!='s':
-                        continue
-                    if word in engrem:
-                        continue
                     if word in checkedWords:
                         continue
                     checkedWords.append(word)
-                    wordVariations = getVariations(word)
-                    for variationType in wordVariations:
-                        if word in typos:
-                            break
-                        for variant in wordVariations[variationType]:
-                            if variant in diction:
-                                spot = wordVariations[variationType][variant]
-                                typos.append(word)
-                                before = ''
-                                after = ''
-                                f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
-                                if(spot == len(variant)):
-                                    f.write(word+'-><!--'+ variant + '-->'+ variant[0 : spot-1 : ] + "'''" + variant[spot-1] + "'''")
-                                else:
-                                    f.write(word+'-><!--'+ variant + '-->'+(variant[0 : spot : ] + "'''" + variant[spot] + "'''" + variant[spot+1:]))
-                                f.write('? (' + variationType + ') context: \n<nowiki>~~~ ')
-                                for x in range(-12,1):
-                                    if index+x >= 0 and index+x < l:
-                                        before += objects[index+x]
-                                f.write(before+' </nowiki><br>\n\'\'\''+word+'\'\'\' <nowiki>')
-                                for x in range(1,12):
-                                    if index+x >= 0 and index+x < l:
-                                        after += objects[index+x]
-                                f.write(after+' ~~~</nowiki>')
-                                f.flush()
-                                break
+                    if word in typos:
+                        break
+                    
+                    if word in diction:
+                        f.write('\n'+title.replace('    <title>','== [[').replace('</title>',']] =='))
+                        f.write(word+'-><!--')
+                        print (word)
+                        fix = diction[word].split(",")[0]
+                        f.write(fix+'-->'+textfile.name)
+                    f.flush()
+                    break
 f.close()
